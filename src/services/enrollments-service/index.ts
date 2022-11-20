@@ -1,4 +1,6 @@
 import { request } from "@/utils/request";
+import { AddressEnrollment } from "@/protocols";
+import { getAddress } from "@/utils/cep-service";
 import { notFoundError, requestError } from "@/errors";
 import addressRepository, { CreateAddressParams } from "@/repositories/address-repository";
 import enrollmentRepository, { CreateEnrollmentParams } from "@/repositories/enrollment-repository";
@@ -7,19 +9,19 @@ import { Address, Enrollment } from "@prisma/client";
 import { ViaCEPAddress } from "@/protocols";
 import httpStatus from "http-status";
 
-async function getAddressFromCEP(cep: string): Promise<ViaCEPAddress> {
-  const result = await request.get(`https://viacep.com.br/ws/${cep}/json/`);
+async function getAddressFromCEP(cep: string): Promise<AddressEnrollment> {
+  const result = await getAddress(cep);
 
-  if (!result.data) {
-    throw notFoundError();
+  if (!result) {
+    throw notFoundError(); //lançar -> pro arquivo que chamou essa função
   }
 
   const address = {
-    logradouro: result.data.logradouro,
-    complemento: result.data.complemento,
-    bairro: result.data.bairro,
-    cidade: result.data.localidade,
-    uf: result.data.uf
+    logradouro: result.logradouro,
+    complemento: result.complemento,
+    bairro: result.bairro,
+    cidade: result.localidade,
+    uf: result.uf
   };
 
   return address;
@@ -52,10 +54,10 @@ type GetAddressResult = Omit<Address, "createdAt" | "updatedAt" | "enrollmentId"
 async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollmentWithAddress) {
   const enrollment = exclude(params, "address");
   const address = getAddressForUpsert(params.address);
-  const verifiedCEP = request.get(`https://viacep.com.br/ws/${address.cep}/json/`);
 
-  if ((await verifiedCEP).data.erro) {
-    throw requestError(httpStatus.BAD_REQUEST, httpStatus[400]);
+  const verifiedAddress = await getAddressFromCEP(address.cep);
+  if (verifiedAddress.error) {
+    throw notFoundError();
   }
 
   const newEnrollment = await enrollmentRepository.upsert(params.userId, enrollment, exclude(enrollment, "userId"));
