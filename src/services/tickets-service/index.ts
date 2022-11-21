@@ -37,10 +37,26 @@ async function createTicket(userId: number, ticketTypeId: number) {
   return newTicket;
 }
 
+async function getOneById(id: number) {
+  const ticket = await ticketsRepository.findById(id);
+
+  if (!ticket) throw notFoundError();
+
+  return ticket;
+}
+
+async function update(ticketId: number) {
+  const updatedTicket = await ticketsRepository.update(ticketId);
+
+  return updatedTicket;
+}
+
 const ticketsService = {
   getTicketTypes,
   getOneByEnrollmentId,
-  createTicket
+  createTicket,
+  getOneById,
+  update
 };
 
 export default ticketsService;

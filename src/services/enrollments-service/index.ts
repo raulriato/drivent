@@ -1,6 +1,7 @@
+import { request } from "@/utils/request";
 import { AddressEnrollment } from "@/protocols";
 import { getAddress } from "@/utils/cep-service";
-import { notFoundError, requestError } from "@/errors";
+import { notFoundError } from "@/errors";
 import addressRepository, { CreateAddressParams } from "@/repositories/address-repository";
 import enrollmentRepository, { CreateEnrollmentParams } from "@/repositories/enrollment-repository";
 import { exclude } from "@/utils/prisma-utils";
@@ -13,12 +14,20 @@ async function getAddressFromCEP(cep: string): Promise<AddressEnrollment> {
     throw notFoundError(); //lançar -> pro arquivo que chamou essa função
   }
 
+  const {
+    bairro,
+    localidade,
+    uf,
+    complemento,
+    logradouro
+  } = result;
+
   const address = {
-    logradouro: result.logradouro,
-    complemento: result.complemento,
-    bairro: result.bairro,
-    cidade: result.localidade,
-    uf: result.uf
+    bairro,
+    cidade: localidade,
+    uf,
+    complemento,
+    logradouro
   };
 
   return address;
@@ -41,6 +50,7 @@ async function getOneWithAddressByUserId(userId: number): Promise<GetOneWithAddr
 type GetOneWithAddressByUserIdResult = Omit<Enrollment, "userId" | "createdAt" | "updatedAt">;
 
 function getFirstAddress(firstAddress: Address): GetAddressResult {
+  console.log(firstAddress);
   if (!firstAddress) return null;
 
   return exclude(firstAddress, "createdAt", "updatedAt", "enrollmentId");
@@ -52,8 +62,10 @@ async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollm
   const enrollment = exclude(params, "address");
   const address = getAddressForUpsert(params.address);
 
-  const verifiedAddress = await getAddressFromCEP(address.cep);
-  if (verifiedAddress.error) {
+  //TODO - Verificar se o CEP é válido
+
+  const result = await getAddressFromCEP(address.cep);
+  if (result.error) {
     throw notFoundError();
   }
 
