@@ -1,4 +1,3 @@
-import { request } from "@/utils/request";
 import { AddressEnrollment } from "@/protocols";
 import { getAddress } from "@/utils/cep-service";
 import { notFoundError, requestError } from "@/errors";
@@ -6,8 +5,6 @@ import addressRepository, { CreateAddressParams } from "@/repositories/address-r
 import enrollmentRepository, { CreateEnrollmentParams } from "@/repositories/enrollment-repository";
 import { exclude } from "@/utils/prisma-utils";
 import { Address, Enrollment } from "@prisma/client";
-import { ViaCEPAddress } from "@/protocols";
-import httpStatus from "http-status";
 
 async function getAddressFromCEP(cep: string): Promise<AddressEnrollment> {
   const result = await getAddress(cep);
@@ -32,7 +29,7 @@ async function getOneWithAddressByUserId(userId: number): Promise<GetOneWithAddr
 
   if (!enrollmentWithAddress) throw notFoundError();
 
-  const [firstAddress] = enrollmentWithAddress.Address;
+  const firstAddress = enrollmentWithAddress.Address;
   const address = getFirstAddress(firstAddress);
 
   return {
