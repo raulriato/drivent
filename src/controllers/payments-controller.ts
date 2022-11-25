@@ -1,6 +1,5 @@
 import { AuthenticatedRequest } from "@/middlewares";
 import { PaymentInfo } from "@/protocols";
-import enrollmentsService from "@/services/enrollments-service";
 import paymentsService from "@/services/payments-service";
 import ticketsService from "@/services/tickets-service";
 import { Response } from "express";
