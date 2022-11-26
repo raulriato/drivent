@@ -14,3 +14,20 @@ export async function getHotels(req: AuthenticatedRequest, res: Response) {
     res.sendStatus(httpStatus.UNAUTHORIZED);
   }
 }
+
+export async function getHotelById(req: AuthenticatedRequest, res: Response) {
+  const { userId } = req;
+  const hotelId = Number(req.params.hotelId);
+
+  if (!hotelId) {
+    return res.sendStatus(httpStatus.BAD_REQUEST);
+  }
+
+  try {
+    const hotel = await hotelsService.getOneById(hotelId, userId);
+
+    res.status(httpStatus.OK).send(hotel);
+  } catch (error) {
+    return res.sendStatus(httpStatus.UNAUTHORIZED);
+  }
+}
