@@ -121,6 +121,27 @@ describe("GET: /hotels/:hotelId", () => {
       expect(response.status).toBe(httpStatus.UNAUTHORIZED);
     });
 
+    it("should respond with status 400 if params is not valid", async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+
+      const response = await server.get("/hotels/a").set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(httpStatus.BAD_REQUEST);
+    });
+
+    it("should respond with status 404 if the params doesn't correspond to any hotel", async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      const enrollment = await createEnrollmentWithAddress(user);
+      const ticketType = await createTicketTypeWithHotel();
+      const ticket = await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
+
+      const response = await server.get("/hotels/1").set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(httpStatus.NOT_FOUND);
+    });
+
     it("should respond with status 200 and with hotel rooms data", async () => {
       const user = await createUser();
       const token = await generateValidToken(user);

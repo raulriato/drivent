@@ -1,4 +1,4 @@
-import { unauthorizedError } from "@/errors";
+import { notFoundError, unauthorizedError } from "@/errors";
 import hotelsRepository from "@/repositories/hotels-repositpry";
 import { Ticket, TicketStatus, TicketType } from "@prisma/client";
 import enrollmentsService from "../enrollments-service";
@@ -28,7 +28,15 @@ function isValidTicket(ticket: Ticket & {
 async function getOneById(hotelId: number, userId: number) {
   await checkCredentials(userId);
 
-  return hotelsRepository.findOneWithRoomsById(hotelId);
+  const hotel = await hotelsRepository.findOneWithRoomsById(hotelId);
+  console.log("finalizou a requisição");
+
+  if (!hotel) {
+    console.log("deu o erro");
+    
+    throw notFoundError();
+  }
+  return hotel;
 }
 
 const hotelsService = {
